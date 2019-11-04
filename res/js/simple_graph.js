@@ -153,7 +153,28 @@ Drawing.SimpleGraph = function(options) {
    *  numNodes and numEdges.
    */
   function createGraph() {
+        loadFile("res/data.json", function(data){
+          alert(data);
+          jsonObj = JSON.parse(data);
+          for(var i = 0; i < jsonObj.nodes.length; i++){
+            var node = new GRAPHVIS.Node(i);
+            node.data.title = jsonObj.nodes[i].label || "";
+            node.data.color = jsonObj.nodes[i].color;
+            node.data.size = 12*jsonObj.nodes[i].size;
+            graph.addNode(node);
+            drawNode(node);
+            nodes.push(node);
+          } 
+          for(var i = 0; i < jsonObj.edges.length; i++){
+            var node = nodes[jsonObj.edges[i].source]
+            var target_node = nodes[jsonObj.edges[i].target]
+            if(graph.addEdge(node, target_node)) {
+              drawEdge(node, target_node, jsonObj.edges[i].color);
+            }
+          }
+        });
 
+/*
     var node = new GRAPHVIS.Node(0);
     node.data.title = "This is node " + node.id;
     graph.addNode(node);
@@ -181,7 +202,7 @@ Drawing.SimpleGraph = function(options) {
       }
       steps++;
     }
-
+*/
     that.layout_options.width = that.layout_options.width || 2000;
     that.layout_options.height = that.layout_options.height || 2000;
     that.layout_options.iterations = that.layout_options.iterations || 100000;
@@ -197,7 +218,7 @@ Drawing.SimpleGraph = function(options) {
    *  Create a node object and add it to the scene.
    */
   function drawNode(node) {
-    var draw_object = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( {  color: Math.random() * 0xe0e0e0, opacity: 0.8 } ) );
+    var draw_object = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( {  color: node.data.color, size:node.data.color, opacity: 0.8 } ) );
     var label_object;
 
     if(that.show_labels) {
@@ -228,8 +249,9 @@ Drawing.SimpleGraph = function(options) {
   /**
    *  Create an edge object (line) and add it to the scene.
    */
-  function drawEdge(source, target) {
-      material = new THREE.LineBasicMaterial({ color: 0x606060 });
+  function drawEdge(source, target, c) {
+    c = c || 0x606060;
+      material = new THREE.LineBasicMaterial({ color: c });
 
       var tmp_geo = new THREE.Geometry();
       tmp_geo.vertices.push(source.data.draw_object.position);
